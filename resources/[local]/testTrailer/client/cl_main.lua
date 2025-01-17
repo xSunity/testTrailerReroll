@@ -1,50 +1,49 @@
-local notfindtrailer = true
+local notFoundTrailer = true
 local globalSearch = function()
     return GetVehicleInDirection(GetEntityCoords(PlayerPedId()), GetOffsetFromEntityInWorldCoords(PlayerPedId(), 0.0, 20.0, 0.0), nil)
 end
 
-RegisterNetEvent('trailer:leftVehicle', function(vehId)
-    if not DoesEntityExist(vehId) then
+AddEventHandler("baseevents:leftVehicle", function(currentVehicle, currentSeat, vehicleDisplayName, vehicleNetId)
+    if not DoesEntityExist(currentVehicle) then
         return 
     end
-    local vehicleOffsetCoords = GetOffsetFromEntityInWorldCoords(vehId, 0.0, 0.0, -1.0)
-    local vehicleCoords = GetEntityCoords(vehId)
-    havefindclass = false
-    local testnb = 0.0
-	local trailerFind = nil;
-    local havetobreak = false;
-    while not trailerFind do
-        trailerFind = GetVehicleInDirection(vector3(vehicleCoords.x, vehicleCoords.y, vehicleCoords.z), vector3(vehicleOffsetCoords.x, vehicleOffsetCoords.y, vehicleOffsetCoords.z - testnb), vehId)
-        testnb = testnb + 0.1
-		if not string.match(GetDisplayNameFromVehicleModel(GetEntityModel(trailerFind)),"TRAILER") then
-			trailerFind = nil
+    local vehicleOffsetCoords = GetOffsetFromEntityInWorldCoords(currentVehicle, 0.0, 0.0, -1.0)
+    local vehicleCoords = GetEntityCoords(currentVehicle)
+    local testNb = 0.0
+	local trailerFound = nil;
+    local haveToBreak = false;
+    while not trailerFound do
+        trailerFound = GetVehicleInDirection(vector3(vehicleCoords.x, vehicleCoords.y, vehicleCoords.z), vector3(vehicleOffsetCoords.x, vehicleOffsetCoords.y, vehicleOffsetCoords.z - testNb), currentVehicle)
+        testNb = testNb + 0.1
+		if not string.match(GetDisplayNameFromVehicleModel(GetEntityModel(trailerFound)),"TRAILER") then
+			trailerFound = nil
 		end
-        if trailerFind == nil or trailerFind == 0 then
+        if trailerFound == nil or trailerFound == 0 then
             Citizen.SetTimeout(5000, function()
-                havetobreak = true
+                haveToBreak = true
             end)
         else 
-            havetobreak = true
+            haveToBreak = true
         end
-        if havetobreak then
+        if haveToBreak then
             break
         end
         Citizen.Wait(0)
     end
-    if tonumber(trailerFind) == 0 or trailerFind == nil then
+    if tonumber(trailerFound) == 0 or trailerFound == nil then
 		return;
 	end
     for i = 0, 5 do
-        SetVehicleDoorShut(vehId, i, true) -- will close all doors from 0-5
+        SetVehicleDoorShut(currentVehicle, i, true) -- will close all doors from 0-5
     end
-    AttachEntityToEntity(vehId, trailerFind, GetEntityBoneIndexByName(trailerFind, 'chassis'), GetOffsetFromEntityGivenWorldCoords(trailerFind, vehicleCoords), 0.0, 0.0, 0.0, false, false, true, false, 20, true)
-    trailerFind = nil
+    AttachEntityToEntity(currentVehicle, trailerFound, GetEntityBoneIndexByName(trailerFound, 'chassis'), GetOffsetFromEntityGivenWorldCoords(trailerFound, vehicleCoords), 0.0, 0.0, 0.0, false, false, true, false, 20, true)
+    trailerFound = nil
 end)
 
-RegisterNetEvent('trailer:enteredVehicle', function(vehId)
-    if DoesEntityExist(vehId) and IsEntityAttached(vehId) then
-        DetachEntity(vehId, true, true)
-        notfindtrailer = true
+AddEventHandler("baseevents:enteredVehicle", function(currentVehicle, currentSeat, vehicleDisplayName)
+    if DoesEntityExist(currentVehicle) and IsEntityAttached(currentVehicle) then
+        DetachEntity(currentVehicle, true, true)
+        notFoundTrailer = true
     end
 end)
 
@@ -56,7 +55,7 @@ local CommandTable = {
                 SetVehicleDoorOpen(trailerfind, 4, false, false)
             end
             trailerfind = nil
-            notfindtrailer = true
+            notFoundTrailer = true
         else
             Config.SendNotification(Config.Lang["TrailerNotFind"])
         end
@@ -68,7 +67,7 @@ local CommandTable = {
                 SetVehicleDoorShut(trailerfind, 4, false, false)
             end
             trailerfind = nil
-            notfindtrailer = true
+            notFoundTrailer = true
         else
             Config.SendNotification(Config.Lang["TrailerNotFind"])
         end
@@ -80,7 +79,7 @@ local CommandTable = {
                 SetVehicleDoorOpen(trailerfind, 5, false, false)
             end
             trailerfind = nil
-            notfindtrailer = true
+            notFoundTrailer = true
         else
             Config.SendNotification(Config.Lang["TrailerNotFind"])
         end
@@ -92,7 +91,7 @@ local CommandTable = {
                 SetVehicleDoorShut(trailerfind, 5, true, false)
             end
             trailerfind = nil
-            notfindtrailer = true
+            notFoundTrailer = true
         else
             Config.SendNotification(Config.Lang["TrailerNotFind"])
         end
@@ -109,9 +108,9 @@ function GetVehicleInDirection(cFrom, cTo, vehId)
 	if vehId == nil or vehId == 0 then
 		vehId = PlayerPedId()
 	end
-    notfindtrailer = true
+    notFoundTrailer = true
     local rayHandle = CastRayPointToPoint(cFrom.x, cFrom.y, cFrom.z, cTo.x, cTo.y, cTo.z, 10, vehId, 0)
     local _, _, _, _, vehicle = GetRaycastResult(rayHandle)
-    notfindtrailer = vehicle == 0
+    notFoundTrailer = vehicle == 0
     return vehicle
 end
